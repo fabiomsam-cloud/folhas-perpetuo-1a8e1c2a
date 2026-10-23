@@ -1,0 +1,9 @@
+edge/
+.token
+.repo
+saida/
+publicar.sh
+*.py
+planos.json
+rotina.md
+.DS_Store
