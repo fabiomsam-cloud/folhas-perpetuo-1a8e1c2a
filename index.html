@@ -132,7 +132,7 @@ async function abrir(dia, semHoje){
   try { FOLHA = await api("&dia="+dia); }
   catch(e){ $("status").innerHTML = '<span class="aviso">Sem folha em '+ddmm(dia)+' ('+esc(e.message)+').</span>'; $("folhas").innerHTML=""; return; }
   const F = FOLHA.dados, com = FOLHA.comentarios || {};
-  const quem = FOLHA.modelo === "auto" || com.automatico ? "comentário automático (histórico)" : "comentários de "+esc((FOLHA.modelo||"").replace("claude-","").replace(/-/g," "));
+  const quem = FOLHA.modelo === "auto" || com.automatico ? "comentário automático (histórico)" : "comentários de "+esc((FOLHA.modelo||"").replace("claude-","").replace(/^(\w)/,c=>c.toUpperCase()).replace(/-(\d+)-(\d+)$/," $1.$2").replace(/-/g," "));
   $("status").innerHTML = (semHoje ? '<span class="aviso">A folha de hoje ainda não saiu (a rotina roda às 07h15). Mostrando a última. </span>' : "") +
     `Folha de <b>${ddmm(F.dia)}</b> · dados fechados até <b>${ddmm(F.dados_ate)}</b> · gerada ${esc(F.gerado_em.slice(11,16))} · ${quem}` +
     (F.avisos && F.avisos.length ? ' · <span class="aviso">'+F.avisos.map(esc).join(" · ")+'</span>' : "");
