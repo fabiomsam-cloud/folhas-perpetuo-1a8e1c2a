@@ -83,7 +83,7 @@ body{background:var(--fundo);color:var(--tinta);font-family:'DejaVu Sans',Verdan
       <button id="hoje">Hoje</button>
     </div>
     <div class="filtros">
-      <label>Folha <select id="fFolha"><option value="">Todas</option><option value="resumo">Resumo</option><option value="produtos">Por produto</option><option value="campanhas">Campanhas</option></select></label>
+      <label>Folha <select id="fFolha"><option value="">Todas</option><option value="resumo">Resumo</option><option value="funis">Funis</option><option value="produtos">Por produto</option><option value="campanhas">Campanhas</option></select></label>
       <label>Produto <select id="fProd"><option value="">Todos</option></select></label>
       <label>Fase <select id="fFase"><option value="">Todas</option><option value="F1">F1 · atração</option><option value="F2">F2 · corredor</option><option value="F3">Cadastro (WEB/ING)</option><option value="BLIND">Blindado</option></select></label>
       <button class="btn" id="imp">Imprimir</button>
@@ -146,6 +146,7 @@ function desenhar(){
   const tipo = $("fFolha").value, prod = $("fProd").value, fase = $("fFase").value;
   let h = "";
   if(!tipo || tipo==="resumo") h += folhaResumo(F, com, prod);
+  if((!tipo || tipo==="funis") && F.funis) h += folhaFunis(F, com);
   if(!tipo || tipo==="produtos") F.produtos.filter(p => !prod || p.codigo===prod).forEach(p => h += folhaProduto(F, com, p, fase));
   if(!tipo || tipo==="campanhas") h += folhaCampanhas(F, prod, fase);
   $("folhas").innerHTML = h || '<div class="vazio">Nada com esses filtros.</div>';
@@ -182,6 +183,33 @@ function folhaResumo(F, com, prod){
       <li><b>WhatsApp real</b> = o que a Meta cobrou do número da Anne (sou-dw), em reais pela PTAX do dia, dividido pelos produtos conforme as mensagens de cada um.</li>
       <li><b>ROAS</b> = vendas do funil ÷ investido total. <b>Custo por 50%</b> = gasto ÷ pessoas que viram pelo menos metade do vídeo (régua da F1 e F2).</li>
     </ul>${com.automatico||FOLHA.modelo==="auto"?'<p class="auto">Comentário automático: dia do histórico, gerado só a partir dos alertas.</p>':""}</div></section>`;
+}
+
+const FUNIS_URL = "https://fabiomsam-cloud.github.io/funis-perpetuo-90b1e32d/";
+const FILA_NOME = {lead_novo:"lead novo sem toque", carrinho:"carrinho sem toque", negociacao:"negociação parada", classe_a:"classe A parada"};
+function folhaFunis(F, com){
+  const U = F.funis || {};
+  if(U.erro) return `<section class="folha" data-id="funis"><h3>Funis do perpétuo</h3><p class="status aviso">Seção não gerada: ${esc(U.erro)}</p></section>`;
+  const cf = (com.funis||{});
+  const rows = (U.contas||[]).map(c => {
+    const alvo = c.meta_matriculas!=null ? c.meta_matriculas : c.sugestao;
+    const cls = alvo==null ? "" : (c.matriculas >= alvo ? "pos" : (c.matriculas >= 0.8*alvo ? "" : "neg"));
+    const est = c.meta_habilitada===false ? "conta nova" : ((c.estrutura||{}).webinario||(c.estrutura||{}).captacao||(c.estrutura||{}).topo ? "" : "sem funil de topo");
+    const fq = c.filas||{}; const filas = Object.keys(FILA_NOME).filter(k=>fq[k]).map(k=>`${nf(fq[k])} ${FILA_NOME[k]}`).join(" · ");
+    return `<tr class="${c.meta_habilitada===false?"":""}"><td class="lab">${esc(c.nome)}</td><td>${c.meta_matriculas!=null?nf(c.meta_matriculas):"—"}</td><td>${c.sugestao!=null?nf(c.sugestao):"—"}</td><td class="${cls}">${nf(c.matriculas)}${c.reembolsos?` <small>−${c.reembolsos} reemb.</small>`:""}</td><td>${R(c.receita_1a)}</td><td>${nf(c.leads)} → ${nf(c.oportunidades)} → ${nf(c.negociacoes)} → ${nf(c.matriculas)}<br><small>${P(c.oportunidades,c.leads)} · ${P(c.negociacoes,c.oportunidades)} · ${P(c.matriculas,c.negociacoes)}</small></td><td>${c.matriculas&&c.gasto_mentoria?R(c.cpa_funil)+" / "+R(c.cpa_mentoria):"—"}</td><td>${X(c.roas)}</td><td>${nf(c.fechamento_anne)} / ${nf(c.fechamento_humano)} / ${nf(c.fechamento_sozinho)}</td><td class="esq">${filas||"—"}${est?` <span class="pill nenhuma">${est}</span>`:""}</td></tr>`;
+  }).join("");
+  const coment = (U.contas||[]).filter(c => cf[c.mentoria]).map(c => `<li><b>${esc(c.nome)}:</b> ${esc(cf[c.mentoria])}</li>`).join("");
+  const eb = U.excluido_black||{};
+  return `<section class="folha" data-id="funis"><h3>Funis do perpétuo · etapa a etapa <button onclick="imprimirUma(this)">Imprimir esta</button></h3>
+  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} até ${ddmm(U.fim)} · 9 contas · sem Black (${eb.vendas||0} vendas e ${R(eb.gasto)} excluídos)</span><span><a href="${FUNIS_URL}" target="_blank">abrir o painel dos funis</a></span></div>
+  <div class="tw"><table><tr><th>Conta</th><th>Meta<small>fixada</small></th><th>Sugestão<small>verba ÷ CPA</small></th><th>Matrículas</th><th>Receita<small>1ª parcela</small></th><th>Leads → Oport. → Negoc. → Matr.</th><th>Custo por aluno<small>funil / mentoria</small></th><th>ROAS</th><th>Fechamento<small>Anne / humano / só</small></th><th>Leads esquecidos agora · estrutura</th></tr>${rows}</table></div>
+  <div class="com">${coment?`<h4>Onde mexer, conta a conta</h4><ul>${coment}</ul>`:""}
+    <h4>Como ler</h4><ul>
+      <li><b>Lead</b> = telefone que entrou no período por cadastro, isca, clique, carrinho ou disparo. <b>Oportunidade</b> = conversou ou clicou para matricular. <b>Negociação</b> = link enviado, checkout aberto ou carrinho. <b>Matrícula</b> = 1ª parcela paga.</li>
+      <li><b>Custo por aluno do funil</b> = só campanhas do funil (webinário, blindado, captação); <b>da mentoria</b> = tudo, inclusive atração e corredor. Sempre Meta × 1,1383.</li>
+      <li><b>Sugestão</b> = verba prevista (ou gasto dos últimos 30 dias) ÷ custo por aluno da base set+out. <b>Fechamento</b> = quem concluiu: Anne (link), humano (escalado) ou sozinho.</li>
+      <li><b>Ordem de investigação:</b> muito checkout e pouco pagamento → muita negociação e pouca matrícula → muita gente na oferta e pouca compra → muito cadastro e pouca audiência → poucos com perfil.</li>
+    </ul></div></section>`;
 }
 
 const LINHAS = [
