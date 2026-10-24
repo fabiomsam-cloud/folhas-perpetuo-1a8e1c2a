@@ -188,6 +188,7 @@ function folhaResumo(F, com, prod){
 const FUNIS_URL = "https://fabiomsam-cloud.github.io/funis-perpetuo-90b1e32d/";
 const FILA_NOME = {lead_novo:"lead novo sem toque", carrinho:"carrinho sem toque", negociacao:"negociação parada", classe_a:"classe A parada"};
 function folhaFunis(F, com){
+  const P = (a,b) => (!b) ? "—" : nf(100*a/b,1)+"%";
   const U = F.funis || {};
   if(U.erro) return `<section class="folha" data-id="funis"><h3>Funis do perpétuo</h3><p class="status aviso">Seção não gerada: ${esc(U.erro)}</p></section>`;
   const cf = (com.funis||{});
