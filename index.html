@@ -170,7 +170,7 @@ function folhaResumo(F, com, prod){
   rs.filter(pp).forEach(r => t2 += row2(r));
   const pontos = (com.pontos||[]).map(p => `<li>${esc(p)}</li>`).join("");
   return `<section class="folha" data-id="resumo"><h3>Resumo do perpétuo <button onclick="imprimirUma(this)">Imprimir esta</button></h3>
-  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} · dias fechados até ${ddmm(F.dados_ate)} · sem Black</span><span>Plano até o dia = plano do mês pró-rata</span></div>
+  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} · dias fechados até ${ddmm(F.dados_ate)} · ${F.mes>="2026-11"?"sem a Black não alunos (webinários e torra entram: são o plano do mês)":"sem Black"}</span><span>Plano até o dia = plano do mês pró-rata</span></div>
   <div class="sub">Resultado do mês</div>
   <div class="tw"><table><tr><th>Produto</th><th>Matrículas</th><th>Receita líquida<small>das matrículas</small></th><th>Leads gerados</th><th>Meta<small>com imposto</small></th><th>WhatsApp real</th><th>Investido total</th><th>Vendas do funil</th><th>ROAS</th></tr>${t1}</table></div>
   <div class="sub">Contra o plano até o dia</div>
