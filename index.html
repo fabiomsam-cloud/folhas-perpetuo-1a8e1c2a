@@ -170,7 +170,7 @@ function folhaResumo(F, com, prod){
   rs.filter(pp).forEach(r => t2 += row2(r));
   const pontos = (com.pontos||[]).map(p => `<li>${esc(p)}</li>`).join("");
   return `<section class="folha" data-id="resumo"><h3>Resumo do perpétuo <button onclick="imprimirUma(this)">Imprimir esta</button></h3>
-  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} · dias fechados até ${ddmm(F.dados_ate)} · ${F.mes>="2026-11"?"sem a Black não alunos (webinários e torra entram: são o plano do mês)":"sem Black"}</span><span>Plano até o dia = plano do mês pró-rata</span></div>
+  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} · dias fechados até ${ddmm(F.dados_ate)} · ${F.mes>="2026-11"?"Black das mentorias entra (regra do painel dos funis); Black sem mentoria fora":"sem Black"}</span><span>Plano até o dia = plano do mês pró-rata</span></div>
   <div class="sub">Resultado do mês</div>
   <div class="tw"><table><tr><th>Produto</th><th>Matrículas</th><th>Receita líquida<small>das matrículas</small></th><th>Leads gerados</th><th>Meta<small>com imposto</small></th><th>WhatsApp real</th><th>Investido total</th><th>Vendas do funil</th><th>ROAS</th></tr>${t1}</table></div>
   <div class="sub">Contra o plano até o dia</div>
@@ -203,7 +203,7 @@ function folhaFunis(F, com){
   const coment = (U.contas||[]).filter(c => cf[c.mentoria]).map(c => `<li><b>${esc(c.nome)}:</b> ${esc(cf[c.mentoria])}</li>`).join("");
   const eb = U.excluido_black||{};
   return `<section class="folha" data-id="funis"><h3>Funis do perpétuo · etapa a etapa <button onclick="imprimirUma(this)">Imprimir esta</button></h3>
-  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} até ${ddmm(U.fim)} · 9 contas · sem Black (${eb.vendas||0} vendas e ${R(eb.gasto)} excluídos)</span><span><a href="${FUNIS_URL}" target="_blank">abrir o painel dos funis</a></span></div>
+  <div class="cab"><span>Mês ${esc(F.mes.slice(5))}/${esc(F.mes.slice(0,4))} até ${ddmm(U.fim)} · 9 contas · ${F.mes>="2026-11"?"Black sem mentoria fora":"sem Black"} (${eb.vendas||0} vendas e ${R(eb.gasto)} de gasto excluídos)</span><span><a href="${FUNIS_URL}" target="_blank">abrir o painel dos funis</a></span></div>
   <div class="tw"><table><tr><th>Conta</th><th>Meta<small>fixada</small></th><th>Sugestão<small>verba ÷ CPA</small></th><th>Matrículas</th><th>Receita<small>1ª parcela</small></th><th>Leads → Oport. → Negoc. → Matr.</th><th>Custo por aluno<small>funil / mentoria</small></th><th>ROAS</th><th>Fechamento<small>Anne / humano / só</small></th><th>Leads esquecidos agora · estrutura</th></tr>${rows}</table></div>
   <div class="com">${coment?`<h4>Onde mexer, conta a conta</h4><ul>${coment}</ul>`:""}
     <h4>Como ler</h4><ul>
