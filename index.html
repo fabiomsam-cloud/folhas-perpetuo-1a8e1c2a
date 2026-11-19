@@ -85,7 +85,7 @@ body{background:var(--fundo);color:var(--tinta);font-family:'DejaVu Sans',Verdan
     <div class="filtros">
       <label>Folha <select id="fFolha"><option value="">Todas</option><option value="resumo">Resumo</option><option value="funis">Funis</option><option value="produtos">Por produto</option><option value="campanhas">Campanhas</option></select></label>
       <label>Produto <select id="fProd"><option value="">Todos</option></select></label>
-      <label>Fase <select id="fFase"><option value="">Todas</option><option value="F1">F1 · atração</option><option value="F2">F2 · corredor</option><option value="F3">Cadastro (WEB/ING)</option><option value="BLIND">Blindado</option></select></label>
+      <label>Fase <select id="fFase"><option value="">Todas</option><option value="F1">F1 · atração</option><option value="F2">F2 · corredor</option><option value="F3">Cadastro (WEB/ING)</option><option value="BLIND">Blindado</option><option value="TORRA">Torra (venda direta)</option></select></label>
       <button class="btn" id="imp">Imprimir</button>
     </div>
   </div>
@@ -96,7 +96,7 @@ body{background:var(--fundo);color:var(--tinta);font-family:'DejaVu Sans',Verdan
 const API = "https://dqpxugdhlgafvddavzzp.supabase.co/functions/v1/folhas-perpetuo";
 const K = new URLSearchParams(location.search).get("k") || "";
 const DIAS_SEM = ["SEG","TER","QUA","QUI","SEX","SÁB","DOM"];
-const FASE_NOME = {F1:"F1",F2:"F2",F3:"WEB/ING",BLIND:"BLIND",OUTRAS:"outra"};
+const FASE_NOME = {F1:"F1",F2:"F2",F3:"WEB/ING",BLIND:"BLIND",TORRA:"TORRA",OUTRAS:"outra"};
 const $ = id => document.getElementById(id);
 let LISTA = [], FOLHA = null;
 
@@ -197,7 +197,8 @@ function folhaFunis(F, com){
     const cls = alvo==null ? "" : (c.matriculas >= alvo ? "pos" : (c.matriculas >= 0.8*alvo ? "" : "neg"));
     const est = c.meta_habilitada===false ? "conta nova" : ((c.estrutura||{}).webinario||(c.estrutura||{}).captacao||(c.estrutura||{}).topo ? "" : "sem funil de topo");
     const fq = c.filas||{}; const filas = Object.keys(FILA_NOME).filter(k=>fq[k]).map(k=>`${nf(fq[k])} ${FILA_NOME[k]}`).join(" · ");
-    return `<tr class="${c.meta_habilitada===false?"":""}"><td class="lab">${esc(c.nome)}</td><td>${c.meta_matriculas!=null?nf(c.meta_matriculas):"—"}</td><td>${c.sugestao!=null?nf(c.sugestao):"—"}</td><td class="${cls}">${nf(c.matriculas)}${c.reembolsos?` <small>−${c.reembolsos} reemb.</small>`:""}</td><td>${R(c.receita_1a)}</td><td>${nf(c.leads)} → ${nf(c.oportunidades)} → ${nf(c.negociacoes)} → ${nf(c.matriculas)}<br><small>${P(c.oportunidades,c.leads)} · ${P(c.negociacoes,c.oportunidades)} · ${P(c.matriculas,c.negociacoes)}</small></td><td>${c.matriculas&&c.gasto_mentoria?R(c.cpa_funil)+" / "+R(c.cpa_mentoria):"—"}</td><td>${X(c.roas)}</td><td>${nf(c.fechamento_anne)} / ${nf(c.fechamento_humano)} / ${nf(c.fechamento_sozinho)}</td><td class="esq">${filas||"—"}${est?` <span class="pill nenhuma">${est}</span>`:""}</td></tr>`;
+    const pv = c.previsao||{}; const pvTag = (pv.sem_previsao||pv.sem_dados||pv.alerta==null) ? "" : (pv.alerta ? `<span class="pill neg" title="${esc((pv.alertas||[]).join(' · '))}">⚠ fora da previsão</span>` : `<span class="pill pos">✓ na previsão</span>`);
+    return `<tr class="${c.meta_habilitada===false?"":""}"><td class="lab">${esc(c.nome)}<br><a href="${FUNIS_URL}mapa/?m=${esc(c.mentoria)}&t=mestre&p=mes" target="_blank" style="font-size:.75rem">mapa ↗</a> ${pvTag}</td><td>${c.meta_matriculas!=null?nf(c.meta_matriculas):"—"}</td><td>${c.sugestao!=null?nf(c.sugestao):"—"}</td><td class="${cls}">${nf(c.matriculas)}${c.reembolsos?` <small>−${c.reembolsos} reemb.</small>`:""}</td><td>${R(c.receita_1a)}</td><td>${nf(c.leads)} → ${nf(c.oportunidades)} → ${nf(c.negociacoes)} → ${nf(c.matriculas)}<br><small>${P(c.oportunidades,c.leads)} · ${P(c.negociacoes,c.oportunidades)} · ${P(c.matriculas,c.negociacoes)}</small></td><td>${c.matriculas&&c.gasto_mentoria?R(c.cpa_funil)+" / "+R(c.cpa_mentoria):"—"}</td><td>${X(c.roas)}</td><td>${nf(c.fechamento_anne)} / ${nf(c.fechamento_humano)} / ${nf(c.fechamento_sozinho)}</td><td class="esq">${filas||"—"}${est?` <span class="pill nenhuma">${est}</span>`:""}</td></tr>`;
   }).join("");
   const coment = (U.contas||[]).filter(c => cf[c.mentoria]).map(c => `<li><b>${esc(c.nome)}:</b> ${esc(cf[c.mentoria])}</li>`).join("");
   const eb = U.excluido_black||{};
@@ -209,6 +210,7 @@ function folhaFunis(F, com){
       <li><b>Lead</b> = telefone que entrou no período por cadastro, isca, clique, carrinho ou disparo. <b>Oportunidade</b> = conversou ou clicou para matricular. <b>Negociação</b> = link enviado, checkout aberto ou carrinho. <b>Matrícula</b> = 1ª parcela paga.</li>
       <li><b>Custo por aluno do funil</b> = só campanhas do funil (webinário, blindado, captação); <b>da mentoria</b> = tudo, inclusive atração e corredor. Sempre Meta × 1,1383.</li>
       <li><b>Sugestão</b> = verba prevista (ou gasto dos últimos 30 dias) ÷ custo por aluno da base set+out. <b>Fechamento</b> = quem concluiu: Anne (link), humano (escalado) ou sozinho.</li>
+      <li><b>Mapa:</b> cada conta tem o funil desenhado com os números do mês em cada seta (link "mapa" na primeira coluna; pede o token do painel). <b>Previsão:</b> ✓ ou ⚠ compara o mês até ontem com a previsão base salva no mapa, no mesmo ritmo de dias.</li>
       <li><b>Ordem de investigação:</b> muito checkout e pouco pagamento → muita negociação e pouca matrícula → muita gente na oferta e pouca compra → muito cadastro e pouca audiência → poucos com perfil.</li>
     </ul></div></section>`;
 }
@@ -216,7 +218,7 @@ function folhaFunis(F, com){
 const LINHAS = [
   {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"Meta F1/F2 (topo)",f:s=>s.meta_topo,fmt:"brl",fase:["F1","F2"]},
   {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"Meta cadastro (WEB/ING)",f:s=>s.meta_cad,fmt:"brl",fase:["F3"]},
-  {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"Meta blindado",f:s=>s.meta_blind,fmt:"brl",fase:["BLIND"]},
+  {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"Meta blindado + torra",f:s=>s.meta_blind,fmt:"brl",fase:["BLIND","TORRA"]},
   {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"Meta total com imposto",f:(s,F)=>s.meta*(1+F.imposto),fmt:"brl",dst:1},
   {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"WhatsApp real (Anne)",f:s=>s.wa,fmt:"brl"},
   {sec:"INVESTIMENTO",cor:"#4F6F9C",lab:"Investido total",f:(s,F)=>s.meta*(1+F.imposto)+s.wa,fmt:"brl",dst:1},
